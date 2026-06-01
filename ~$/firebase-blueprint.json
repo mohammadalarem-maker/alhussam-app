@@ -1,0 +1,218 @@
+{
+  "entities": {
+    "account": {
+      "title": "Account",
+      "description": "A financial account in the chart of accounts.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "Unique account code (e.g., 1101)" },
+        "name": { "type": "string", "description": "Account name (e.g., Cash at Bank)" },
+        "type": { "type": "string", "enum": ["asset", "liability", "equity", "revenue", "expense"] },
+        "parentId": { "type": "string", "description": "ID of the parent account for hierarchy" },
+        "isAnalytical": { "type": "boolean", "description": "If true, this account can have journal entries" },
+        "level": { "type": "number", "description": "Hierarchy level depth" }
+      },
+      "required": ["code", "name", "type", "isAnalytical"]
+    },
+    "journalEntry": {
+      "title": "Journal Entry",
+      "description": "A double-entry accounting transaction.",
+      "type": "object",
+      "properties": {
+        "number": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "debit": { "type": "number" },
+        "credit": { "type": "number" },
+        "reference": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["number", "date", "description", "debit", "credit"]
+    },
+    "item": {
+      "title": "Inventory Item",
+      "description": "A product or service in the inventory.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "barcode": { "type": "string" },
+        "unit": { "type": "string" },
+        "purchasePrice": { "type": "number" },
+        "salePrice": { "type": "number" },
+        "sku": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" }
+      },
+      "required": ["code", "name", "salePrice"]
+    },
+    "invoice": {
+      "title": "Invoice",
+      "description": "Sales or purchase transaction record.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["sale", "purchase"] },
+        "number": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "partnerId": { "type": "string", "description": "Customer or Supplier ID" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "tax": { "type": "number" },
+        "discount": { "type": "number" },
+        "paymentType": { "type": "string", "enum": ["cash", "card"] },
+        "paymentTerms": { "type": "string" },
+        "status": { "type": "string", "enum": ["paid", "unpaid", "draft"] }
+      },
+      "required": ["type", "number", "date", "total", "status"]
+    },
+    "user": {
+      "title": "User",
+      "description": "System user information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "accountant", "sales"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "status"]
+    },
+    "customer": {
+      "title": "Customer",
+      "description": "Customer information.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "totalPurchases": { "type": "number" },
+        "lastPurchaseDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "category": {
+      "title": "Product Category",
+      "description": "Category for inventory items.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "expense": {
+      "title": "Expense",
+      "description": "Business expense entry.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["date", "amount", "category"]
+    },
+    "debt": {
+      "title": "Debt",
+      "description": "Financial debt record (payable or receivable).",
+      "type": "object",
+      "properties": {
+        "contactName": { "type": "string", "description": "Name of the person/entity involved" },
+        "amount": { "type": "number", "description": "Original total amount" },
+        "remainingAmount": { "type": "number", "description": "Balance left to be paid/collected" },
+        "phoneNumber": { "type": "string", "description": "Contact phone number" },
+        "type": { "type": "string", "enum": ["receivable", "payable"] },
+        "date": { "type": "string", "format": "date-time" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "partial", "settled"] }
+      },
+      "required": ["contactName", "amount", "remainingAmount", "type", "date", "status"]
+    },
+    "setting": {
+      "title": "System Settings",
+      "description": "Application configuration and shop profile.",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string" },
+        "shopPhone": { "type": "string" },
+        "shopAddress": { "type": "string" },
+        "currency": { "type": "string" },
+        "receiptNotes": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "primaryColor": { "type": "string" },
+        "secondaryColor": { "type": "string" }
+      }
+    },
+    "userActivity": {
+      "title": "User Activity Log",
+      "description": "Audit log of user actions in the system.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "recordId": { "type": "string" },
+        "collection": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "object" }
+      },
+      "required": ["userId", "userName", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/user_activity/{activityId}": {
+      "schema": "userActivity",
+      "description": "Audit logs for all user operations."
+    },
+    "/settings/{settingId}": {
+      "schema": "setting",
+      "description": "System-wide settings."
+    },
+    "/accounts/{accountId}": {
+      "schema": "account",
+      "description": "Chart of accounts definitions."
+    },
+    "/journal_entries/{entryId}": {
+      "schema": "journalEntry",
+      "description": "Financial transaction entries."
+    },
+    "/expenses/{expenseId}": {
+      "schema": "expense",
+      "description": "Business expenses records."
+    },
+    "/debts/{debtId}": {
+      "schema": "debt",
+      "description": "Payable and receivable debt records."
+    },
+    "/items/{itemId}": {
+      "schema": "item",
+      "description": "Inventory items and stock levels."
+    },
+    "/categories/{categoryId}": {
+      "schema": "category",
+      "description": "Inventory item categories."
+    },
+    "/invoices/{invoiceId}": {
+      "schema": "invoice",
+      "description": "Sales and Purchase records."
+    },
+    "/customers/{customerId}": {
+      "schema": "customer",
+      "description": "Customer records."
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User profiles and roles."
+    },
+    "/admins/{adminId}": {
+      "schema": "object",
+      "description": "Root admin UIDs."
+    }
+  }
+}

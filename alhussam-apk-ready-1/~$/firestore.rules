@@ -1,0 +1,251 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PHASE 3: Primitives ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Role helpers
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'faremazen3@gmail.com' && (request.auth.token.email_verified == true || !('email_verified' in request.auth.token))) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAccountant() {
+      return isAdmin() || (isEmailVerified() && getUserRole() == 'accountant');
+    }
+
+    function isSales() {
+      return isAdmin() || (isEmailVerified() && getUserRole() == 'sales');
+    }
+
+    // --- PHASE 4: Validation Blueprints ---
+
+    function isValidAccount(data) {
+      return data.keys().hasAll(['code', 'name', 'type', 'isAnalytical']) &&
+             data.keys().size() >= 4 && 
+             data.code is string && data.code.size() <= 20 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.type in ['asset', 'liability', 'equity', 'revenue', 'expense'] &&
+             data.isAnalytical is bool &&
+             (!('parentId' in data) || data.parentId == null || data.parentId is string) &&
+             (!('balance' in data) || data.balance is number);
+    }
+
+    function isValidItem(data) {
+      return data.keys().hasAll(['code', 'name', 'price']) &&
+             data.keys().size() >= 3 &&
+             data.code is string && data.code.size() <= 100 &&
+             data.name is string && data.name.size() <= 500 &&
+             data.price is number;
+    }
+
+    function isValidInvoice(data) {
+      return data.keys().hasAll(['number', 'date', 'total', 'status']) &&
+             data.keys().size() >= 4 &&
+             data.number is string && data.number.size() <= 100 &&
+             data.total is number &&
+             data.status in ['paid', 'unpaid', 'draft'] &&
+             (!('paymentType' in data) || data.paymentType is string) &&
+             (!('paymentTerms' in data) || data.paymentTerms is string);
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll(['name']) &&
+             data.keys().size() >= 1 &&
+             data.name is string && data.name.size() <= 200 &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('email' in data) || data.email is string) &&
+             (!('points' in data) || data.points is number);
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name']) &&
+             data.keys().size() >= 1 &&
+             data.name is string && data.name.size() <= 100 &&
+             (!('description' in data) || data.description is string);
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['date', 'amount', 'category']) &&
+             data.keys().size() >= 3 &&
+             data.amount is number &&
+             data.category is string &&
+             data.date is string;
+    }
+
+    function isValidDebt(data) {
+      return data.keys().hasAll(['contactName', 'amount', 'remainingAmount', 'type', 'date', 'status']) &&
+             data.keys().size() >= 6 &&
+             data.contactName is string &&
+             data.amount is number &&
+             data.remainingAmount is number &&
+             data.type in ['receivable', 'payable'] &&
+             data.date is string &&
+             data.status in ['pending', 'partial', 'settled'] &&
+             (!('phoneNumber' in data) || data.phoneNumber is string);
+    }
+
+    function isValidJournalEntry(data) {
+      return data.keys().hasAll(['number', 'date', 'description', 'debit', 'credit']) &&
+             data.keys().size() >= 5 &&
+             data.number is string && data.number.size() <= 100 &&
+             data.date is string &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.debit is number &&
+             data.credit is number &&
+             (!('reference' in data) || data.reference is string) &&
+             (!('createdAt' in data) || data.createdAt is string);
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'status']) &&
+             data.email is string &&
+             data.role in ['admin', 'accountant', 'sales'] &&
+             data.status in ['active', 'suspended'] &&
+             (!('displayName' in data) || data.displayName is string) &&
+             (!('lastLogin' in data) || data.lastLogin is string) &&
+             (!('createdAt' in data) || data.createdAt is string) &&
+             (!('updatedAt' in data) || data.updatedAt is string);
+    }
+
+    function isValidUserActivity(data) {
+      return data.keys().hasAll(['userId', 'userName', 'action', 'timestamp']) &&
+             data.keys().size() >= 4 &&
+             data.userId == request.auth.uid &&
+             data.userName is string &&
+             data.action is string &&
+             data.timestamp is string;
+    }
+
+    // --- MATCH BLOCKS ---
+
+    match /user_activity/{activityId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidUserActivity(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false; 
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (
+        isAdmin() || 
+        (resource.data.email == request.auth.token.email) ||
+        (request.auth.token.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
+        (resource.data.uid == request.auth.uid)
+      );
+      allow create: if (isAdmin() && isValidUser(incoming())) || (
+        isSignedIn() && request.auth.uid == userId && 
+        isValidUser(incoming()) && 
+        incoming().status == 'active' &&
+        (
+          incoming().role == 'sales' || 
+          incoming().role == 'accountant' || 
+          (request.auth.token.email == 'faremazen3@gmail.com' && incoming().role == 'admin')
+        )
+      ); 
+      allow update: if (
+        isAdmin() || 
+        (isSignedIn() && request.auth.uid == userId && (request.auth.token.email == 'faremazen3@gmail.com' || existing().email.lower() == request.auth.token.email.lower() || existing().uid == request.auth.uid))
+      ) && isValidUser(incoming());
+      allow delete: if isAdmin() || (isSignedIn() && (existing().email == request.auth.token.email || existing().uid == request.auth.uid));
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /accounts/{accountId} {
+      allow get: if isAccountant();
+      allow list: if isAccountant();
+      allow create: if isAccountant() && isValidId(accountId) && isValidAccount(incoming());
+      allow update: if isAccountant() && (
+        isAdmin() || (
+          isValidAccount(incoming()) && 
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'isAnalytical'])
+        )
+      );
+    }
+
+    match /items/{itemId} {
+      allow read: if isSignedIn();
+      allow create, update: if (isAdmin() || isAccountant()) && isValidItem(incoming());
+      allow delete: if isAdmin() || isAccountant();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create, update: if (isAdmin() || isAccountant()) && isValidCategory(incoming());
+      allow delete: if isAdmin() || isAccountant();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isSignedIn();
+      allow create: if isEmailVerified() && (isAdmin() || isSales()) && isValidInvoice(incoming());
+      allow update: if isEmailVerified() && (isAdmin() || isAccountant());
+      allow delete: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow create, update: if isEmailVerified() && (isAdmin() || isSales()) && isValidCustomer(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /journal_entries/{entryId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAccountant() && isValidJournalEntry(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn();
+      allow create, update: if (isAdmin() || isAccountant()) && isValidExpense(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /debts/{debtId} {
+      allow read: if isSignedIn();
+      allow create, update: if (isAdmin() || isAccountant() || isSales()) && isValidDebt(incoming());
+      allow delete: if isAdmin();
+    }
+
+  }
+}

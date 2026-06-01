@@ -1,0 +1,23 @@
+المشروع أصبح جاهز للتحويل إلى APK.
+
+الخطوات:
+
+1- افتح CMD داخل المشروع
+2- نفذ:
+npm install
+
+3- ابن المشروع:
+npm run build
+
+4- أنشئ أندرويد:
+npx cap add android
+
+5- مزامنة:
+npx cap sync
+
+6- فتح Android Studio:
+npx cap open android
+
+7- استخراج APK:
+Build > Build APK(s)
+

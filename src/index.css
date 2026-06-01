@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Custom Theme Colors using variables */
+  --color-primary: var(--primary, #3D2B1F);
+  --color-secondary: var(--secondary, #8B5E3C);
+  --color-accent: var(--accent, #D4A373);
+  --color-background: var(--background, #F9FAFB);
+  --color-surface: var(--surface, #FFFFFF);
+  --color-foreground: var(--text, #111827);
+}
+
+body {
+  @apply bg-background text-foreground antialiased transition-colors duration-300;
+  direction: rtl;
+}
+
+/* Custom scrollbar for ERP feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-secondary/30 rounded-full hover:bg-secondary/50;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2;
+}
