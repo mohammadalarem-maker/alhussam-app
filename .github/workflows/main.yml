@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -15,16 +15,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build React App
+      - name: Build web app
         run: npm run build
-
-      - name: Install Capacitor Android
-        run: npm install @capacitor/android
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -35,14 +32,19 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build APK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission
+        run: chmod +x android/gradlew
+
+      - name: Build APK (Debug)
         run: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
