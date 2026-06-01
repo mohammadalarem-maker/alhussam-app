@@ -1,10 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.alhussam.phone',
-  appName: 'الحسام فون',
-  webDir: 'dist',
-  bundledWebRuntime: false,
+  appId: 'com.mohammed.alhussam',
+  appName: 'AlHussam',
+  webDir: 'dist'
 };
 
 export default config;
