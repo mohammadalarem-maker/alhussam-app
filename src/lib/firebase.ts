@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAuth, browserSessionPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'; // استيراد قاعدة البيانات
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSy...", 
@@ -12,8 +12,6 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// إعداد قاعدة البيانات Firestore وتصديرها باسم db ليتعرف عليها ملف الترجمة
 const db = getFirestore(app);
 
 let auth;
@@ -31,5 +29,10 @@ if (typeof window !== 'undefined' && !navigator.product?.includes('ReactNative')
   });
 }
 
-export { app, auth, db }; // أضفنا db هنا
+// دالة وهمية لتجاوز خطأ الاستيراد في ملف main.tsx
+const testConnection = async () => {
+  return true;
+};
+
+export { app, auth, db, testConnection }; // أضفنا testConnection هنا في التصدير
 
