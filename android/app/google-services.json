@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "450062176386",
+    "project_id": "alhussam-store-2ae68",
+    "storage_bucket": "alhussam-store-2ae68.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450062176386:android:ed88d0b88d9cf2155f249b",
+        "android_client_info": {
+          "package_name": "com.alhussam.phone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd8NpBy-Ft269o4c5R5J10mZDnFVmmJVE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
