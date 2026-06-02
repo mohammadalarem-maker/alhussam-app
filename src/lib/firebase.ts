@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence, browserSessionPersistence } from 'firebase/auth';
+import { initializeAuth, browserSessionPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSy...", 
@@ -12,16 +12,18 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// حل مشكلة تعارض الويب مع الهاتف لتجنب فشل البناء في GitHub
 let auth;
+
+// فحص البيئة: إذا كنا داخل المتصفح أو بيئة بناء الويب (Vite)
 if (typeof window !== 'undefined' && !navigator.product?.includes('ReactNative')) {
-  // إذا كانت البيئة ويب (Vite Build)
   auth = initializeAuth(app, {
     persistence: browserSessionPersistence
   });
 } else {
-  // إذا كانت البيئة هاتف (React Native)
+  // هنا الحل السحري للهاتف: استدعاء الحزم داخلياً فقط عند التشغيل الفعلي على الجوال
   const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  const { getReactNativePersistence } = require('firebase/auth');
+  
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
